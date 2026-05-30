@@ -1,0 +1,1382 @@
+<html><head><base href=".",
+<meta charset="UTF-8">
+<title>Racing GP Manager</title>
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f0f8ff;
+        color: #333333;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        margin-top: 50px;
+    }
+
+    .header {
+        background: #70a7e8;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+        color: white;
+    }
+
+    .menu {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .menu-item {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid #70a7e8;
+        color: #333333;
+    }
+
+    .menu-item:nth-child(1), 
+    .menu-item:nth-child(2), 
+    .menu-item:nth-child(3)  
+    {
+        display: none;
+    }
+    
+    .race-info, .standings, .race-controls, .driver-select, .calendar-view {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #70a7e8;
+        color: #333333;
+    }
+
+    .button {
+        background: #70a7e8;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        margin: 5px;
+    }
+
+    .button:hover {
+        background: #5691e0;
+    }
+
+    .button:disabled {
+        background: #666;
+        cursor: not-allowed;
+    }
+
+    #startRaceButton {
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+
+    #startRaceButton.driver-selected {
+        opacity: 1;
+    }
+
+    #startRaceButton:disabled {
+        background: #666;
+        cursor: not-allowed;
+    }
+
+    .driver-select {
+        display: none;
+    }
+
+    .player-info {
+        background: #70a7e8;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: white;
+    }
+
+    .player-info select {
+        background: white;
+        border: 1px solid #70a7e8;
+        padding: 5px 10px;
+        border-radius: 4px;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .player-info select:focus {
+        outline: none;
+        border-color: #5691e0;
+    }
+
+    .controlled-driver {
+        background: #70a7e8;
+        color: white;
+    }
+
+    .tire-info {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .tire-info.soft { background: #ff0000; color: white; }
+    .tire-info.medium { background: #ffff00; color: black; }
+    .tire-info.hard { background: #ffffff; color: black; }
+
+    .status-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        border-bottom: 2px solid #70a7e8;
+    }
+
+    .status-item {
+        padding: 5px 15px;
+        background: #e6f3ff;
+        border-radius: 4px;
+        color: #333333;
+    }
+
+    .pace-indicator {
+        background: #70a7e8;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+
+    .race-controls-top {
+      position: fixed;
+      top: 40px;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      z-index: 99;
+    }
+
+    .calendar-view {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+      border: 1px solid #70a7e8;
+    }
+
+    .calendar-item {
+      padding: 10px;
+      margin: 5px 0;
+      background: #e6f3ff;
+      border-radius: 4px;
+      cursor: default;
+    }
+
+    .calendar-item.completed {
+      background: #90EE90;
+    }
+
+    .calendar-item:hover {
+      background: #cce5ff;
+    }
+    
+    th {
+        background: #70a7e8;
+        color: white;
+    }
+    
+    .standings table {
+        width: 100%;
+        border-spacing: 20px 0;
+        margin-top: 10px;
+    }
+
+    .standings td, .standings th {
+        padding: 8px 15px;
+        text-align: left;
+    }
+
+    .pace-controls .button {
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+
+    .pace-controls .button.active {
+        border: 3px solid #000;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5); 
+        opacity: 1;
+    }
+
+    .menu-item[onclick="showRace"] {
+        cursor: pointer;
+    }
+
+    .calendar-view {
+        display: none;
+    }
+    
+    .pit-controls .button.selected {
+        border: 3px solid #000;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .tire-option {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 5px;
+        border: 1px solid #000;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .tire-option.soft {
+        background: #ff0000;
+        color: white;
+        border: 1px solid #000;
+    }
+
+    .tire-option.medium { 
+        background: #ffff00;
+        color: black;
+        border: 1px solid #000;
+    }
+
+    .tire-option.hard {
+        background: #ffffff;
+        color: black;
+        border: 1px solid #000;
+    }
+    
+    .pit-controls, .pace-controls {
+      border: 1px solid #70a7e8;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 0 10px;
+    }
+
+    .controls-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    
+    .controls-label {
+      background: #70a7e8;
+      color: white;
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      margin-bottom: 5px;
+      border-radius: 2px;
+    }
+
+    .pace-controls, .pit-controls {
+      border: none;
+      padding: 0;
+      margin: 0 10px;
+    }
+    
+    .championship-menu-img {
+      max-width: 300px;
+      margin: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .championship-menu-img:hover {
+      transform: scale(1.05);
+    }
+
+    .team-section {
+      margin-bottom: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .team-header {
+      color: #333;
+      border-bottom: 2px solid #70a7e8;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .driver-card {
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #f8f9fa;
+    }
+
+    .driver-card:hover {
+      transform: translateX(5px);
+      background: #e6f3ff;
+    }
+
+    .driver-card.selected {
+      background: #70a7e8;
+      color: white;
+      border-color: #5691e0;
+    }
+
+    .driver-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .driver-info h4 {
+      margin: 0;
+      font-size: 16px;
+      color: #000000;
+    }
+
+    .driver-info h4 {
+      margin: 0;
+      font-size: 16px;
+      color: #000000;  
+    }
+
+    .driver-card.selected .driver-info h4 {
+      color: #ffffff;  
+    }
+
+    .driver-stats {
+      margin: 5px 0 0;
+      font-size: 14px;
+      color: #666;    
+      display: none;
+    }
+
+    .driver-card.selected .driver-stats {
+      color: #fff;    
+    }
+
+    #confirmDriverButton {
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px;
+      font-size: 16px;
+    }
+    
+    .race-config {
+      margin: 20px 0;
+    }
+
+    .race-config h3 {
+      margin: 15px 0 10px;
+    }
+
+    .race-config select,
+    .race-config input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #70a7e8;
+      border-radius: 4px;
+    }
+
+    #confirmRaceSetup {
+      width: 100%;
+      margin-top: 20px;
+      padding: 15px;
+      font-size: 16px;
+    }
+
+    .player-info {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .driver-selection {
+      margin-bottom: 30px;
+    }
+
+    #lapNumber {
+        background: white;
+        color: black;
+    }
+</style>
+</head>
+<body>
+<div class="status-bar">
+    <div class="status-item">
+        <span>Volta: <span id="topCurrentLap">1</span></span>
+    </div>
+    <div class="status-item">
+        <span>Temperatura: <span id="topTrackTemp">--</span>&#xb0;C</span>  
+    </div>
+    <div class="status-item">
+        <span>Desgaste dos Pneus: <span id="topTireWear">100</span>%</span>
+    </div>
+    <div class="status-item pace-indicator">
+        <span>Ritmo: <span id="currentPaceDisplay">Normal</span></span>
+    </div>
+</div>
+<div class="race-controls-top" style="display: none;">
+  <button class="button" id="pauseButtonTop" onclick="togglePause()">Pausar</button>
+  
+  <div class="pace-controls">
+    <div class="controls-label">Op&#xe7;&#xf5;es de gest&#xe3;o de pneus</div>
+    <button class="button" onclick="setPace(&apos;attack&apos;)">Atacar</button>
+    <button class="button" onclick="setPace(&apos;normal&apos;)">Normal</button>
+    <button class="button" onclick="setPace(&apos;conserve&apos;)">Conservar</button>
+  </div>
+
+  <div class="pit-controls">
+    <div class="controls-label">Op&#xe7;&#xf5;es de pit stop</div>
+    <button class="button soft" onclick="selectPitTire(&apos;soft&apos;)">Macio</button>
+    <button class="button medium" onclick="selectPitTire(&apos;medium&apos;)">M&#xe9;dio</button>
+    <button class="button hard" onclick="selectPitTire(&apos;hard&apos;)">Duro</button>
+    <button class="button" onclick="makePitStop()">Pit Stop</button>
+  </div>
+</div>
+<div class="container">
+    <div class="header">
+        <h1>Racing GP Manager</h1>
+    </div>
+
+    <div class="player-info">
+        <h2>Configura&#xe7;&#xe3;o da Corrida</h2>
+        
+        <div class="driver-selection">
+            <h3>Selecione o Piloto</h3>
+            <div id="driverList">
+              <!-- Teams will be populated here -->
+            </div>
+        </div>
+
+        <div class="race-config">
+            <h3>Selecione o Circuito</h3>
+            <select id="circuitChoice" class="button">
+              <option value>Selecione um Circuito</option>
+              <!-- Circuit options populated by JS -->
+            </select>
+
+            <h3>N&#xfa;mero de Voltas</h3>
+            <input type="number" id="lapNumber" class="button" min="5" max="100" placeholder="5-100 voltas">
+        </div>
+
+        <button id="confirmRaceSetup" class="button" onclick="confirmRaceSetup()">Confirmar Configura&#xe7;&#xe3;o</button>
+    </div>
+
+    <div class="calendar-view" id="calendarView">
+      <h2>Calend&#xe1;rio de Corridas</h2>
+      <div id="racesList"></div>
+      <button class="button" onclick="hideCalendar()">Voltar</button>
+    </div>
+
+    <div class="race-info" id="raceInfo">
+        <h2>GP do Bahrein - Circuito Internacional do Bahrein</h2>
+        <p>Voltas: 57</p>
+        <p>Dist&#xe2;ncia: 5.412 km</p>
+        <p>Temperatura da Pista: <span id="preRaceTemp">--</span>&#xb0;C</p>
+        <div class="tire-selection">
+            <h3>Escolha os Pneus Iniciais</h3>
+            <div class="tire-option soft" onclick="selectTire(&apos;soft&apos;)">Macio</div>
+            <div class="tire-option medium" onclick="selectTire(&apos;medium&apos;)">M&#xe9;dio</div>
+            <div class="tire-option hard" onclick="selectTire(&apos;hard&apos;)">Duro</div>
+        </div>
+        <button class="button" id="startRaceButton" onclick="startRace()" disabled>Iniciar Corrida</button>
+    </div>
+
+    <div class="standings" id="raceStandings">
+        <table>
+            <thead>
+                <tr>
+                    <th>Pos</th>  
+                    <th>Piloto</th>
+                    <th>Tempo</th>
+                    <th>Diferen&#xe7;a</th>
+                    <th>&#xda;ltima Volta</th>
+                    <th>Pneus</th>
+                    <th>Desgaste</th>
+                </tr>
+            </thead>
+            <tbody id="standingsBody">
+            </tbody>
+        </table>
+        <button id="concludeRaceButton" class="button" style="display: none;" onclick="concludeRace()">Concluir</button>
+    </div>
+
+    <div id="championshipTable" class="standings" style="display: none;">
+        <h2>Classifica&#xe7;&#xe3;o do Campeonato</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Posi&#xe7;&#xe3;o</th>
+                    <th>Piloto</th> 
+                    <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody id="championshipBody">
+            </tbody>
+        </table>
+        <button class="button" onclick="hideChampionship()">Voltar</button>
+    </div>
+
+    <div id="championshipMenu" class="standings" style="display: none;">
+      <h2>Menu do Campeonato</h2>
+      <button class="button" onclick="hideChampionshipMenu()">Voltar</button>
+      <img src="/Verstappen.jpeg" class="championship-menu-img" onclick="showDriversChampionship()" style="cursor: pointer; max-width: 300px; margin: 10px;">
+      <img src="/McLaren.jpeg" class="championship-menu-img" onclick="showConstructorsChampionship()" style="cursor: pointer; max-width: 300px; margin: 10px;">
+    </div>
+
+    <div id="constructorsTable" class="standings" style="display: none;">
+      <h2>Campeonato de Construtores</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Posi&#xe7;&#xe3;o</th>
+            <th>Equipe</th>
+            <th>Pontos</th>
+          </tr>
+        </thead>
+        <tbody id="constructorsBody"></tbody>
+      </table>
+      <button class="button" onclick="hideConstructorsChampionship()">Voltar</button>
+    </div>
+</div>
+
+<audio id="backgroundMusic" loop>
+  <source src="Love Me Again.mp3" type="audio/mp3">
+</audio>
+
+<script>const points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+const audioTracks = ['Love Me Again.mp3', 'Open Your Eyes.mp3', 'Escapee.mp3', 'Latino & Proud.mp3', 'No Problem.mp3', 'Stare Into The Sun.mp3'];
+let currentTrackIndex = 0;
+let currentRaceIndex = 0;
+let championshipPoints = {};
+let canStartRace = false;
+let pitTireSelection = '';
+let isPaused = false;
+let usedTireCompounds = new Set();
+let trackTemperature = 25;
+let aiDriverPaces = {};
+let completedRaces = [];
+let constructorsPoints = {};
+const drivers = [{
+  name: "Max Verstappen",
+  team: "Red Bull Racing",
+  skill: 95
+}, {
+  name: "Sergio Perez",
+  team: "Red Bull Racing",
+  skill: 88
+}, {
+  name: "Charles Leclerc",
+  team: "Ferrari",
+  skill: 90
+}, {
+  name: "Carlos Sainz",
+  team: "Ferrari",
+  skill: 90
+}, {
+  name: "Lewis Hamilton",
+  team: "Mercedes",
+  skill: 92
+}, {
+  name: "George Russell",
+  team: "Mercedes",
+  skill: 89
+}, {
+  name: "Lando Norris",
+  team: "McLaren",
+  skill: 88
+}, {
+  name: "Oscar Piastri",
+  team: "McLaren",
+  skill: 85
+}, {
+  name: "Fernando Alonso",
+  team: "Aston Martin",
+  skill: 89
+}, {
+  name: "Lance Stroll",
+  team: "Aston Martin",
+  skill: 82
+}, {
+  name: "Liam Lawson",
+  team: "RB",
+  skill: 82
+}, {
+  name: "Yuki Tsunoda",
+  team: "RB",
+  skill: 82
+}, {
+  name: "Valtteri Bottas",
+  team: "Kick Sauber",
+  skill: 84
+}, {
+  name: "Zhou Guanyu",
+  team: "Kick Sauber",
+  skill: 80
+}, {
+  name: "Alexander Albon",
+  team: "Williams",
+  skill: 83
+}, {
+  name: "Franco Colapinto",
+  team: "Williams",
+  skill: 82
+}, {
+  name: "Esteban Ocon",
+  team: "Alpine",
+  skill: 84
+}, {
+  name: "Pierre Gasly",
+  team: "Alpine",
+  skill: 83
+}, {
+  name: "Kevin Magnussen",
+  team: "Haas",
+  skill: 81
+}, {
+  name: "Nico Hulkenberg",
+  team: "Haas",
+  skill: 82
+}];
+drivers.forEach(driver => {
+  championshipPoints[driver.name] = 0;
+});
+let raceResults = [];
+let currentLap = 1;
+let selectedTire = '';
+let currentPace = 'normal';
+let tireWear = 100;
+let raceInterval;
+let playerDriver = null;
+const audio = document.getElementById('backgroundMusic');
+const raceCircuits = [{
+  name: "Circuito Internacional do Bahrein",
+  laps: 57,
+  distance: 5.412,
+  baseTemp: 30
+}, {
+  name: "Circuito de Jeddah Corniche",
+  laps: 50,
+  distance: 6.174,
+  baseTemp: 28
+}, {
+  name: "Circuito de Albert Park",
+  laps: 58,
+  distance: 5.278,
+  baseTemp: 18
+}, {
+  name: "Circuito de Suzuka",
+  laps: 53,
+  distance: 5.807,
+  baseTemp: 20
+}, {
+  name: "Circuito Internacional de Xangai",
+  laps: 56,
+  distance: 5.451,
+  baseTemp: 22
+}, {
+  name: "Autódromo Internacional de Miami",
+  laps: 57,
+  distance: 5.412,
+  baseTemp: 26
+}, {
+  name: "Autódromo Enzo e Dino Ferrari",
+  laps: 63,
+  distance: 4.909,
+  baseTemp: 22
+}, {
+  name: "Circuito de Mônaco",
+  laps: 78,
+  distance: 3.337,
+  baseTemp: 20
+}, {
+  name: "Circuito Gilles Villeneuve",
+  laps: 70,
+  distance: 4.361,
+  baseTemp: 18
+}, {
+  name: "Circuito de Barcelona-Catalunya",
+  laps: 66,
+  distance: 4.675,
+  baseTemp: 24
+}, {
+  name: "Red Bull Ring",
+  laps: 71,
+  distance: 4.318,
+  baseTemp: 22
+}, {
+  name: "Circuito de Silverstone",
+  laps: 52,
+  distance: 5.891,
+  baseTemp: 19
+}, {
+  name: "Hungaroring",
+  laps: 70,
+  distance: 4.381,
+  baseTemp: 25
+}, {
+  name: "Circuito de Spa-Francorchamps",
+  laps: 44,
+  distance: 7.004,
+  baseTemp: 18
+}, {
+  name: "Circuito de Zandvoort",
+  laps: 72,
+  distance: 4.259,
+  baseTemp: 17
+}, {
+  name: "Autódromo Nacional de Monza",
+  laps: 53,
+  distance: 5.793,
+  baseTemp: 23
+}, {
+  name: "Circuito Urbano de Baku",
+  laps: 51,
+  distance: 6.003,
+  baseTemp: 22
+}, {
+  name: "Circuito da Marina Bay",
+  laps: 61,
+  distance: 5.063,
+  baseTemp: 29
+}, {
+  name: "Circuito das Américas",
+  laps: 56,
+  distance: 5.513,
+  baseTemp: 24
+}, {
+  name: "Autódromo Hermanos Rodríguez",
+  laps: 71,
+  distance: 4.304,
+  baseTemp: 22
+}, {
+  name: "Autódromo José Carlos Pace",
+  laps: 71,
+  distance: 4.309,
+  baseTemp: 25
+}, {
+  name: "Circuito de Las Vegas",
+  laps: 50,
+  distance: 6.201,
+  baseTemp: 19
+}, {
+  name: "Circuito Internacional de Lusail",
+  laps: 57,
+  distance: 5.419,
+  baseTemp: 27
+}, {
+  name: "Circuito de Yas Marina",
+  laps: 58,
+  distance: 5.281,
+  baseTemp: 28
+}];
+let selectedDriverCard = null;
+function setupBackgroundMusic() {
+  const availableTracks = [...audioTracks];
+  function playNextTrack() {
+    if (availableTracks.length === 0) {
+      availableTracks = [...audioTracks];
+    }
+    const randomIndex = Math.floor(Math.random() * availableTracks.length);
+    const nextTrack = availableTracks.splice(randomIndex, 1)[0];
+    audio.src = nextTrack;
+    audio.play();
+  }
+  audio.addEventListener('ended', playNextTrack);
+  audio.volume = 0.3;
+  playNextTrack();
+}
+function confirmRaceSetup() {
+  if (!playerDriver) {
+    alert('Por favor, selecione um piloto!');
+    return;
+  }
+  const circuitChoice = document.getElementById('circuitChoice');
+  if (!circuitChoice.value) {
+    alert('Por favor, selecione um circuito!');
+    return;
+  }
+  const lapNumber = document.getElementById('lapNumber').value;
+  if (!lapNumber || lapNumber < 5 || lapNumber > 100) {
+    alert('Por favor, insira um número válido de voltas (5-100)!');
+    return;
+  }
+  const circuitIndex = parseInt(circuitChoice.value);
+  const selectedCircuit = raceCircuits[circuitIndex];
+  trackTemperature = getTrackTemperature(selectedCircuit.baseTemp || 25);
+  document.getElementById('preRaceTemp').textContent = Math.round(trackTemperature);
+  document.querySelector('.race-info h2').textContent = `${races[circuitIndex]} - ${selectedCircuit.name}`;
+  document.querySelector('.race-info p').textContent = `Voltas: ${lapNumber}`;
+  raceCircuits[circuitIndex].laps = parseInt(lapNumber);
+  document.querySelector('.player-info').style.display = 'none';
+  document.querySelector('.race-info').style.display = 'block';
+  document.getElementById('startRaceButton').style.display = 'block';
+  document.getElementById('startRaceButton').disabled = false;
+}
+function populateDriverList() {
+  const driverList = document.getElementById('driverList');
+  driverList.innerHTML = '';
+  const teams = {};
+  drivers.forEach(driver => {
+    if (!teams[driver.team]) {
+      teams[driver.team] = [];
+    }
+    teams[driver.team].push(driver);
+  });
+  Object.entries(teams).forEach(([team, teamDrivers]) => {
+    const teamSection = document.createElement('div');
+    teamSection.className = 'team-section';
+    const teamHeader = document.createElement('h4');
+    teamHeader.className = 'team-header';
+    teamHeader.textContent = team;
+    teamSection.appendChild(teamHeader);
+    teamDrivers.forEach(driver => {
+      const driverCard = document.createElement('div');
+      driverCard.className = 'driver-card';
+      driverCard.onclick = () => selectDriver(driver);
+      driverCard.innerHTML = `
+        <div class="driver-info">
+          <h4>${driver.name}</h4>
+        </div>
+      `;
+      teamSection.appendChild(driverCard);
+    });
+    driverList.appendChild(teamSection);
+  });
+}
+function startRace() {
+  if (!playerDriver || !selectedTire || !document.getElementById('circuitChoice').value) {
+    alert('Por favor, complete todas as configurações antes de iniciar a corrida!');
+    return;
+  }
+  const circuitChoice = document.getElementById('circuitChoice');
+  const circuitIndex = parseInt(circuitChoice.value, 10);
+  if (isNaN(circuitIndex)) {
+    alert('Por favor, selecione um circuito válido!');
+    return;
+  }
+  currentRaceIndex = circuitIndex;
+  const lapNumberInput = document.getElementById('lapNumber');
+  const customLaps = parseInt(lapNumberInput.value, 10);
+  if (!isNaN(customLaps) && customLaps >= 5 && customLaps <= 100) {
+    raceCircuits[currentRaceIndex].laps = customLaps;
+  }
+  setupBackgroundMusic();
+  document.getElementById('startRaceButton').style.display = 'none';
+  document.querySelector('.race-info').style.display = 'none';
+  document.querySelector('.race-controls-top').style.display = 'flex';
+  document.querySelector('.standings').style.display = 'block';
+  document.querySelector('.status-bar').style.display = 'flex';
+  usedTireCompounds.clear();
+  usedTireCompounds.add(selectedTire);
+  initializeRace();
+  updateStandings();
+  raceInterval = setInterval(simulateLap, 3000);
+}
+function initializeRace() {
+  const circuit = raceCircuits[currentRaceIndex];
+  trackTemperature = getTrackTemperature(circuit.baseTemp || 25);
+  raceResults = drivers.map(driver => ({
+    ...driver,
+    time: 0,
+    gap: 0,
+    totalTime: 0,
+    isPlayer: driver.name === playerDriver.name,
+    currentTire: randomTireCompound(),
+    tireAge: 0,
+    tireWear: 100,
+    lastLapTime: 0,
+    lastPitLap: 0,
+    firstPitStopDone: false,
+    hasPitted: false
+  }));
+  const playerResult = raceResults.find(r => r.isPlayer);
+  if (playerResult) {
+    playerResult.currentTire = selectedTire;
+  }
+}
+function simulateLap() {
+  if (isPaused) return;
+  const circuit = raceCircuits[currentRaceIndex];
+  const topCurrentLapEl = document.getElementById('topCurrentLap');
+  const topTireWearEl = document.getElementById('topTireWear');
+  const topTrackTempEl = document.getElementById('topTrackTemp');
+  if (topCurrentLapEl) {
+    topCurrentLapEl.textContent = `${currentLap}/${circuit.laps}`;
+  }
+  if (topTireWearEl) {
+    topTireWearEl.textContent = Math.round(tireWear);
+  }
+  if (topTrackTempEl) {
+    topTrackTempEl.textContent = Math.round(trackTemperature);
+  }
+  if (currentLap > circuit.laps) {
+    handleRaceEnd();
+    return;
+  }
+  raceResults.forEach(driver => {
+    driver.tireAge++;
+    if (!driver.isPlayer) {
+      const shouldPitDueToWear = driver.tireWear <= 55;
+      const isNearRaceEnd = circuit.laps - currentLap < 6;
+      if (shouldPitDueToWear && !isNearRaceEnd) {
+        let newTire;
+        if (!driver.firstPitStopDone) {
+          newTire = randomTireCompound(driver.currentTire); 
+          driver.firstPitStopDone = true;
+        } else {
+          newTire = determineBestTireForAI(driver, circuit.laps - currentLap);
+        }
+        driver.currentTire = newTire;
+        driver.tireAge = 0;
+        driver.tireWear = 100;
+        driver.totalTime += 20 + Math.random() * 4;
+        driver.hasPitted = true;
+        driver.lastPitLap = currentLap;
+      }
+      const aiPace = handleAIPace(driver);
+      const wearRate = getTireWearRate(driver.currentTire, aiPace);
+      driver.tireWear -= wearRate;
+      driver.tireWear = Math.max(0, driver.tireWear);
+      const baseLapTime = 120 + Math.random() * 1;
+      const paceModifier = getPaceModifier(aiPace);
+      const tireModifier = getTireModifier(driver.currentTire, driver.tireWear);
+      const skillModifier = 1 - (driver.skill - 80) / 1600;
+      driver.lastLapTime = baseLapTime * paceModifier * tireModifier * skillModifier;
+      driver.totalTime += driver.lastLapTime;
+    } else {
+      const wearRate = getTireWearRate(driver.currentTire, currentPace);
+      tireWear -= wearRate;
+      tireWear = Math.max(0, tireWear);
+      driver.tireWear = tireWear;
+      const baseLapTime = 120 + Math.random() * 1;
+      const paceModifier = getPaceModifier(currentPace);
+      const tireModifier = getTireModifier(driver.currentTire, driver.tireWear);
+      const skillModifier = 1 - (driver.skill - 80) / 1600;
+      driver.lastLapTime = baseLapTime * paceModifier * tireModifier * skillModifier;
+      driver.totalTime += driver.lastLapTime;
+    }
+  });
+  currentLap++;
+  updateStandings();
+}
+function handleAIPace(driver) {
+  const circuit = raceCircuits[currentRaceIndex];
+  const isLongRace = circuit.laps > 24;
+  const remainingLaps = circuit.laps - currentLap;
+  if (isLongRace && driver.tireAge <= 8 && remainingLaps > 5) {
+    return 'conserve';
+  } else if (driver.tireWear < 20 || remainingLaps <= 5) {
+    return 'attack';
+  } else if (driver.tireWear > 80) {
+    return 'conserve';
+  } else {
+    return 'normal';
+  }
+}
+function getTireWearRate(tireType, pace) {
+  const baseWear = {
+    soft: 4.5,
+    medium: 3.0,
+    hard: 2.0
+  };
+  const paceMultiplier = {
+    attack: 1.6,
+    normal: 1.0,
+    conserve: 0.6
+  };
+  return baseWear[tireType] * paceMultiplier[pace];
+}
+function getTireModifier(tireType, tireWear) {
+  const baseTemp = 29;
+  const currentTemp = trackTemperature;
+  const tempDiff = currentTemp - baseTemp;
+  const tireBaseModifier = {
+    'soft': 0.994,
+    'medium': 1.0,
+    'hard': 1.006
+  }[tireType];
+  const tempEffect = {
+    'soft': 0.0002,
+    'medium': 0.00015,
+    'hard': 0.0001
+  }[tireType];
+  let updatedTireBaseModifier = tireBaseModifier + tempDiff * tempEffect;
+  const wearModifier = 1 + (100 - tireWear) / 100 * 0.08;
+  return updatedTireBaseModifier * wearModifier;
+}
+function getPaceModifier(pace) {
+  return {
+    'attack': 0.995,
+    'normal': 1.0,
+    'conserve': 1.004
+  }[pace];
+}
+function handleRaceEnd() {
+  clearInterval(raceInterval);
+  isPaused = false;
+  document.getElementById('concludeRaceButton').style.display = 'block';
+  document.querySelector('.race-controls-top').style.display = 'none';
+}
+function concludeRace() {
+  raceResults.forEach((driver, position) => {
+    if (position < points.length) {
+      championshipPoints[driver.name] = (championshipPoints[driver.name] || 0) + points[position];
+      if (!constructorsPoints[driver.team]) {
+        constructorsPoints[driver.team] = 0;
+      }
+      constructorsPoints[driver.team] += points[position];
+    }
+  });
+  currentLap = 1;
+  selectedTire = '';
+  currentPace = 'normal';
+  tireWear = 100;
+  clearInterval(raceInterval);
+  isPaused = false;
+  document.querySelector('.race-controls-top').style.display = 'none';
+  document.querySelector('.standings').style.display = 'none';
+  document.querySelector('.status-bar').style.display = 'none';
+  document.querySelector('.player-info').style.display = 'block';
+}
+function updateStandings() {
+  const standingsBody = document.getElementById('standingsBody');
+  standingsBody.innerHTML = '';
+  raceResults.sort((a, b) => a.totalTime - b.totalTime);
+  raceResults.forEach((driver, index) => {
+    const row = document.createElement('tr');
+    const gap = index === 0 ? 'LEADER' : 
+      `+${formatTime(driver.totalTime - raceResults[0].totalTime)}`;
+    const tireAge = currentLap - driver.lastPitLap;
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${driver.name}</td>
+      <td>${formatTime(driver.totalTime)}</td>
+      <td>${gap}</td>
+      <td>${formatTime(driver.lastLapTime)}</td>
+      <td><span class="tire-info ${driver.currentTire}">${driver.currentTire.toUpperCase()} (${tireAge})</span></td>
+      <td>${Math.round(driver.tireWear)}%</td>
+    `;
+    if (driver.isPlayer) {
+      row.style.fontWeight = 'bold';
+      row.classList.add('controlled-driver');
+    }
+    standingsBody.appendChild(row);
+  });
+}
+function getTrackTemperature(baseTemp) {
+  return baseTemp + (Math.random() * 5 - 2.5);
+}
+function selectTire(type) {
+  selectedTire = type;
+  usedTireCompounds.add(type);
+  document.querySelectorAll('.race-info .tire-option').forEach(el => el.style.border = 'none');
+  document.querySelector('.race-info .tire-option.' + type).style.border = '2px solid #fff';
+  document.getElementById('startRaceButton').disabled = false;
+}
+function setPace(pace) {
+  currentPace = pace;
+  const paceButtons = document.querySelectorAll('.pace-controls .button');
+  paceButtons.forEach(button => {
+    button.classList.remove('active');
+    if (button.textContent.toLowerCase().includes(pace)) {
+      button.classList.add('active');
+    }
+  });
+  const paceDisplay = document.getElementById('currentPaceDisplay');
+  paceDisplay.textContent = pace.charAt(0).toUpperCase() + pace.slice(1);
+}
+function selectPitTire(type) {
+  pitTireSelection = type;
+  document.querySelectorAll('.pit-controls .button').forEach(button => {
+    button.classList.remove('selected');
+  });
+  const selectedButton = document.querySelector(`.pit-controls .button.${type}`);
+  if (selectedButton) {
+    selectedButton.classList.add('selected');
+  }
+}
+function makePitStop() {
+  if (!pitTireSelection) {
+    alert('Selecione os pneus para o pit stop!');
+    return;
+  }
+  const pitTime = 20 + Math.random() * 4;
+  const playerResult = raceResults.find(r => r.isPlayer);
+  if (!playerResult) return;
+  playerResult.totalTime += pitTime;
+  playerResult.lastPitLap = currentLap;
+  playerResult.tireAge = 0;
+  playerResult.currentTire = pitTireSelection;
+  playerResult.tireWear = 100;
+  tireWear = 100;
+  const topTireWearEl = document.getElementById('topTireWear');
+  if (topTireWearEl) {
+    topTireWearEl.textContent = '100';
+  }
+  const tireWearEl = document.getElementById('tireWear');
+  if (tireWearEl) {
+    tireWearEl.textContent = '100';
+  }
+  pitTireSelection = '';
+  document.querySelectorAll('.pit-controls .button').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+}
+function showDriversChampionship() {
+  document.getElementById('championshipMenu').style.display = 'none';
+  document.getElementById('championshipTable').style.display = 'block';
+  updateChampionshipStandings();
+}
+function showConstructorsChampionship() {
+  document.getElementById('championshipMenu').style.display = 'none';
+  document.getElementById('constructorsTable').style.display = 'block';
+  updateConstructorsStandings();
+}
+function updateChampionshipStandings() {
+  const championshipBody = document.getElementById('championshipBody');
+  championshipBody.innerHTML = '';
+  const sortedDrivers = Object.entries(championshipPoints).sort(([, a], [, b]) => b - a).map(([name, points]) => ({
+    name,
+    points
+  }));
+  sortedDrivers.forEach((driver, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${driver.name}</td>
+            <td>${driver.points}</td>
+        `;
+    championshipBody.appendChild(row);
+  });
+}
+function updateConstructorsStandings() {
+  const constructorsBody = document.getElementById('constructorsBody');
+  constructorsBody.innerHTML = '';
+  const sortedConstructors = Object.entries(constructorsPoints).sort(([, a], [, b]) => b - a).map(([team, points]) => ({
+    team,
+    points
+  }));
+  sortedConstructors.forEach((constructor, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${constructor.team}</td>
+            <td>${constructor.points}</td>
+        `;
+    constructorsBody.appendChild(row);
+  });
+}
+function hideChampionship() {
+  document.getElementById('championshipTable').style.display = 'none';
+  document.getElementById('championshipMenu').style.display = 'block';
+}
+function hideConstructorsChampionship() {
+  document.getElementById('constructorsTable').style.display = 'none';
+  document.getElementById('championshipMenu').style.display = 'block';
+}
+function hideChampionshipMenu() {
+  document.getElementById('championshipMenu').style.display = 'none';
+  document.querySelector('.player-info').style.display = 'block';
+}
+function selectDriver(driver) {
+  playerDriver = driver;
+  if (selectedDriverCard) {
+    selectedDriverCard.classList.remove('selected');
+  }
+  const driverCard = event.currentTarget;
+  driverCard.classList.add('selected');
+  selectedDriverCard = driverCard;
+  if (selectedTire) {
+    document.getElementById('startRaceButton').classList.add('driver-selected');
+    document.getElementById('startRaceButton').disabled = false;
+  }
+}
+function togglePause() {
+  isPaused = !isPaused;
+  const pauseButtons = document.querySelectorAll('#pauseButton, #pauseButtonTop');
+  pauseButtons.forEach(button => {
+    button.textContent = isPaused ? 'Continuar' : 'Pausar';
+  });
+}
+function randomTireCompound(currentTire) {
+  const compounds = ['soft', 'medium', 'hard'].filter(t => t !== currentTire);
+  return compounds[Math.floor(Math.random() * compounds.length)];
+}
+function determineBestTireForAI(driver, remainingLaps) {
+  const softWear = 4.5;
+  const mediumWear = 3.0;
+  const hardWear = 2.0;
+
+  const canSoftLast = remainingLaps * softWear <= 100;
+  const canMediumLast = remainingLaps * mediumWear <= 100;
+  const canHardLast = remainingLaps * hardWear <= 100;
+
+  if (canSoftLast) {
+    return 'soft';
+  } else if (canMediumLast) {
+    return 'medium';
+  } else {
+    return 'hard';
+  }
+}
+const circuitChoice = document.getElementById('circuitChoice');
+const races = ["GP do Bahrein", "GP da Arábia Saudita", "GP da Austrália", "GP do Japão", "GP da China", "GP de Miami", "GP de Emília-Romanha", "GP de Mônaco", "GP do Canadá", "GP da Espanha", "GP da Áustria", "GP da Inglaterra", "GP da Hungria", "GP da Bélgica", "GP da Holanda", "GP da Itália", "GP do Azerbaijão", "GP de Singapura", "GP dos Estados Unidos", "GP do México", "GP do Brasil", "GP de Las Vegas", "GP do Qatar", "GP de Abu Dhabi"];
+const raceCircuitsArray = [{
+  name: "Circuito Internacional do Bahrein",
+  laps: 57,
+  distance: 5.412,
+  baseTemp: 30
+}, {
+  name: "Circuito de Jeddah Corniche",
+  laps: 50,
+  distance: 6.174,
+  baseTemp: 28
+}, {
+  name: "Circuito de Albert Park",
+  laps: 58,
+  distance: 5.278,
+  baseTemp: 18
+}, {
+  name: "Circuito de Suzuka",
+  laps: 53,
+  distance: 5.807,
+  baseTemp: 20
+}, {
+  name: "Circuito Internacional de Xangai",
+  laps: 56,
+  distance: 5.451,
+  baseTemp: 22
+}, {
+  name: "Autódromo Internacional de Miami",
+  laps: 57,
+  distance: 5.412,
+  baseTemp: 26
+}, {
+  name: "Autódromo Enzo e Dino Ferrari",
+  laps: 63,
+  distance: 4.909,
+  baseTemp: 22
+}, {
+  name: "Circuito de Mônaco",
+  laps: 78,
+  distance: 3.337,
+  baseTemp: 20
+}, {
+  name: "Circuito Gilles Villeneuve",
+  laps: 70,
+  distance: 4.361,
+  baseTemp: 18
+}, {
+  name: "Circuito de Barcelona-Catalunya",
+  laps: 66,
+  distance: 4.675,
+  baseTemp: 24
+}, {
+  name: "Red Bull Ring",
+  laps: 71,
+  distance: 4.318,
+  baseTemp: 22
+}, {
+  name: "Circuito de Silverstone",
+  laps: 52,
+  distance: 5.891,
+  baseTemp: 19
+}, {
+  name: "Hungaroring",
+  laps: 70,
+  distance: 4.381,
+  baseTemp: 25
+}, {
+  name: "Circuito de Spa-Francorchamps",
+  laps: 44,
+  distance: 7.004,
+  baseTemp: 18
+}, {
+  name: "Circuito de Zandvoort",
+  laps: 72,
+  distance: 4.259,
+  baseTemp: 17
+}, {
+  name: "Autódromo Nacional de Monza",
+  laps: 53,
+  distance: 5.793,
+  baseTemp: 23
+}, {
+  name: "Circuito Urbano de Baku",
+  laps: 51,
+  distance: 6.003,
+  baseTemp: 22
+}, {
+  name: "Circuito da Marina Bay",
+  laps: 61,
+  distance: 5.063,
+  baseTemp: 29
+}, {
+  name: "Circuito das Américas",
+  laps: 56,
+  distance: 5.513,
+  baseTemp: 24
+}, {
+  name: "Autódromo Hermanos Rodríguez",
+  laps: 71,
+  distance: 4.304,
+  baseTemp: 22
+}, {
+  name: "Autódromo José Carlos Pace",
+  laps: 71,
+  distance: 4.309,
+  baseTemp: 25
+}, {
+  name: "Circuito de Las Vegas",
+  laps: 50,
+  distance: 6.201,
+  baseTemp: 19
+}, {
+  name: "Circuito Internacional de Lusail",
+  laps: 57,
+  distance: 5.419,
+  baseTemp: 27
+}, {
+  name: "Circuito de Yas Marina",
+  laps: 58,
+  distance: 5.281,
+  baseTemp: 28
+}];
+raceCircuitsArray.forEach((circuit, index) => {
+  circuitChoice.innerHTML += `<option value="${index}">${races[index]} - ${circuit.name}</option>`;
+});
+function formatTime(timeInSeconds) {
+  const minutes = Math.floor(timeInSeconds / 60);
+  const seconds = Math.floor(timeInSeconds % 60);
+  const milliseconds = Math.floor((timeInSeconds % 1) * 1000);
+  
+  return `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+}
+populateDriverList();</script>
+</body>
+</html>
